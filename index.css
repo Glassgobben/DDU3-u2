@@ -1,0 +1,186 @@
+main {
+    max-height: 97.5vh;
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    font-family: Helvetica;
+}
+
+#left {
+    background-color: lightblue;
+    gap: 20px;
+    border: 20px solid lightblue;
+}
+
+#left,
+#middle,
+#right {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: auto;
+    width: 25vw;
+}
+
+#middle,
+#right {
+    background-color: black;
+    gap: 20px;
+    border: 20px solid black;
+}
+
+#middle {
+    max-height: 163px;
+}
+
+#right {
+    align-self: flex-start;
+    min-height: 163px;
+    max-height: 406px;
+    height: auto;
+}
+
+h1 {
+    margin: 0;
+}
+
+#cities {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    width: 100%;
+    color: white;
+    overflow-y: scroll;
+}
+
+.city {
+    background-color: black;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 21vw;
+    min-height: 49px;
+    border-radius: 10px;
+}
+
+#cities .city {
+    padding-left: 10px;
+}
+
+#cities .city .delete_button {
+    margin: 0 10px;
+}
+
+.city_suggestions .city {
+    padding: 0 10px;
+}
+
+.city:hover {
+    background-color: rgba(0, 0, 0, 0.6);
+    font-size: 17px;
+}
+
+.city:hover>div {
+    font-size: 16px;
+}
+
+.city:hover>div:active {
+    font-size: 14px;
+}
+
+.delete_button {
+    background-color: crimson;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.delete_button:hover {
+    background-color: rgb(255, 24, 70);
+}
+
+.delete_button:active {
+    background-color: rgb(104, 9, 28);
+    color: grey;
+    font-size: 15px;
+    padding: 8px;
+    position: relative;
+    right: 4px;
+}
+
+.input_background {
+    background-color: lightblue;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 100%;
+    padding: 10px 0 30px 0;
+}
+
+.input_background div {
+    display: flex;
+    gap: 5px;
+    padding: 0 10px;
+}
+
+.input_background div p {
+    margin: 0;
+}
+
+input {
+    background-color: transparent;
+    border-top: transparent;
+    border-right: transparent;
+    border-bottom: 1px solid black;
+    border-left: transparent;
+}
+
+input:focus {
+    outline: none;
+}
+
+.green_button {
+    background-color: green;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 20px 0;
+    border-radius: 10px;
+}
+
+.green_button:hover {
+    background-color: forestgreen;
+}
+
+.green_button:active {
+    background-color: darkgreen;
+    color: grey;
+    font-size: 15px;
+    position: relative;
+    top: 2px;
+    width: 98%;
+    padding: 18px 0;
+}
+
+#city_suggestions_hidden {
+    position: absolute;
+}
+
+.city_suggestions {
+    background-color: lightblue;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    flex-grow: 0;
+    flex-shrink: 0;
+    max-height: 183px;
+    overflow-y: scroll;
+    width: 93.75%;
+    padding: 10px;
+}
