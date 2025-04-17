@@ -52,12 +52,12 @@ h1 {
     align-items: center;
     gap: 5px;
     width: 100%;
-    color: white;
     overflow-y: scroll;
 }
 
 .city {
     background-color: black;
+    color: white;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -172,7 +172,6 @@ input:focus {
 
 .city_suggestions {
     background-color: lightblue;
-    color: white;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -183,4 +182,17 @@ input:focus {
     overflow-y: scroll;
     width: 93.75%;
     padding: 10px;
+}
+
+#no_city {
+    background-color: transparent;
+    color: black;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 21vw;
+    min-height: 49px;
+    border-radius: 10px;
+    padding: 0 10px;
 }

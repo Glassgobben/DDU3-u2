@@ -34,46 +34,64 @@ addButton.addEventListener("click", function () {
         country: addCountry.value
     };
     let lock = false;
-    const dataCheck = fetch(req1)
+
+    fetch(req1)
         .then(response => response.json())
-        .then(resource => resource.forEach(city => {
-            if (city.name.toLowerCase() == newCity.name.toLowerCase() && city.country.toLowerCase() == newCity.country.toLowerCase()) {
-                lock = true;
-            }
-        }));
-    if (lock) {
-        return console.error("habib");
-    }
-    if (addName.value.trim() == "" || addCountry.value.trim() == "") {
-        throw Error("Skriv både namn och land för att lägga till en stad!");
-    } else {
-        fetch(req1, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newCity)
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("Något gick fel")
+        .then(resource => {
+            // Första fetch – kolla om staden redan finns
+            resource.forEach(city => {
+                if (
+                    city.name.toLowerCase() === newCity.name.toLowerCase() &&
+                    city.country.toLowerCase() === newCity.country.toLowerCase()
+                ) {
+                    lock = true;
                 }
-                return response.json();
-            })
-            .then(resource => {
-                console.log("Resource från servern:", resource);
-                let div1 = document.createElement("div");
-                div1.classList.add("city");
-                div1.textContent = `${resource.name}, ${resource.country}`;
+            });
 
-                let div2 = document.createElement("div");
-                div2.classList.add("delete_button");
-                div2.textContent = "delete";
+            // Om staden finns – kasta fel och avbryt
+            if (lock) {
+                throw new Error("Staden finns redan i listan!");
+            }
 
-                cities.append(div1);
-                div1.append(div2);
-            })
-            .catch(error => { console.error("Något gick fel:", error) })
-    }
+            // Kolla om inputs är tomma
+            if (addName.value.trim() === "" || addCountry.value.trim() === "") {
+                throw new Error("Skriv både namn och land för att lägga till en stad!");
+            }
+
+            // Annars, skicka POST
+            return fetch(req1, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(newCity)
+            });
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Något gick fel vid POST");
+            }
+            return response.json();
+        })
+        .then(resource => {
+            // Skapa och lägg till divar
+            let div1 = document.createElement("div");
+            div1.classList.add("city");
+            div1.textContent = `
+            ${resource.name.charAt(0).toUpperCase() + resource.name.slice(1).toLowerCase()},
+            ${resource.country.charAt(0).toUpperCase() + resource.country.slice(1).toLowerCase()}
+            `;
+
+            let div2 = document.createElement("div");
+            div2.classList.add("delete_button");
+            div2.textContent = "delete";
+
+            cities.append(div1);
+            div1.append(div2);
+        })
+        .catch(error => {
+            console.error("Fel:", error.message);
+        });
 })
+
 
 searchButton.addEventListener("click", function () {
     if (searchName.value.trim() != "" || searchCountry.value.trim() != "") {
@@ -81,7 +99,6 @@ searchButton.addEventListener("click", function () {
         fetch(req1)
             .then(response => response.json())
             .then(resource => {
-                console.log(resource)
                 if (searchName.value.trim()) {
                     const nameMatches = resource.filter(city => city.name.toLowerCase().includes(searchName.value));
                     nameMatches.forEach(match => allMatches.push(match));
@@ -99,8 +116,15 @@ searchButton.addEventListener("click", function () {
                         citySuggestions.append(div);
                         citySuggestions.classList.add("city_suggestions");
                         citySuggestions.removeAttribute("id");
-                    })
+                    });
+                } else {
+                    let div = document.createElement("div");
+                    div.setAttribute("id", "no_city");
+                    div.textContent = "No cities found...";
+                    citySuggestions.append(div);
+                    citySuggestions.classList.add("city_suggestions");
+                    citySuggestions.removeAttribute("id");
                 }
-            })
-    };
+            });
+    }
 })
