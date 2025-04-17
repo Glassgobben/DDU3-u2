@@ -29,7 +29,9 @@ fetch(req1)
     );
 
 addButton.addEventListener("click", function () {
-    if (addName.value.trim() != "" && addCountry.value.trim() != "") {
+    if (addName.value.trim() == "" || addCountry.value.trim() == "") {
+        throw Error("Skriv både namn och land för att lägga till en stad!");
+    } else {
         const newCity = {
             name: addName.value,
             country: addCountry.value
@@ -39,7 +41,12 @@ addButton.addEventListener("click", function () {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(newCity)
         })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Något gick fel")
+                }
+                return response.json();
+            })
             .then(resource => {
                 let div1 = document.createElement("div");
                 div1.classList.add("city");
