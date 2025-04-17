@@ -16,17 +16,33 @@ fetch(req1)
         resource.forEach(city => {
             let div1 = document.createElement("div");
             div1.classList.add("city");
-            div1.textContent = `${city.name}, ${city.country}`;
+            const name = city.name;
+            const country = city.country;
+            div1.textContent = `${name}, ${country}`;
 
             let div2 = document.createElement("div");
             div2.classList.add("delete_button");
             div2.textContent = "delete";
+            div2.addEventListener("click", function () {
+                fetch(req1, { method: "DELETE" })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error("Något gick fel vid borttagning")
+                        }
+                        return console.log(`${name} har tagits bort från databasen`);
+                    })
+                    .then(resource => {
+                        div1.remove();
+                    })
+                    .catch(error => {
+                        console.error("Fel:", error);
+                    });
+            })
 
             cities.append(div1);
             div1.append(div2);
         })
-    }
-    );
+    })
 
 addButton.addEventListener("click", function () {
     const newCity = {
