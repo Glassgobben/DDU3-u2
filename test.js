@@ -29,13 +29,24 @@ fetch(req1)
     );
 
 addButton.addEventListener("click", function () {
+    const newCity = {
+        name: addName.value,
+        country: addCountry.value
+    };
+    let lock = false;
+    const dataCheck = fetch(req1)
+        .then(response => response.json())
+        .then(resource => resource.forEach(city => {
+            if (city.name.toLowerCase() == newCity.name.toLowerCase() && city.country.toLowerCase() == newCity.country.toLowerCase()) {
+                lock = true;
+            }
+        }));
+    if (lock) {
+        return console.error("habib");
+    }
     if (addName.value.trim() == "" || addCountry.value.trim() == "") {
         throw Error("Skriv både namn och land för att lägga till en stad!");
     } else {
-        const newCity = {
-            name: addName.value,
-            country: addCountry.value
-        };
         fetch(req1, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -48,6 +59,7 @@ addButton.addEventListener("click", function () {
                 return response.json();
             })
             .then(resource => {
+                console.log("Resource från servern:", resource);
                 let div1 = document.createElement("div");
                 div1.classList.add("city");
                 div1.textContent = `${resource.name}, ${resource.country}`;

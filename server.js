@@ -47,19 +47,11 @@ async function handler(req) {
                 name: body.name,
                 country: body.country
             };
-            const cityInArray = cities.some(city => city.name == newCity.name && city.country == newCity.country);
-            if (!cityInArray) {
-                cities.push(newCity);
-                return new Response(JSON.stringify(newCity), {
-                    headers: CORSheaders,
-                    status: 200
-                });
-            } else {
-                return new Response("Staden finns redan i listan!", {
-                    headers: CORSheaders,
-                    status: 404
-                });
-            }
+            cities.push(newCity);
+            return new Response(JSON.stringify(newCity), {
+                headers: CORSheaders,
+                status: 200
+            });
         } catch (error) {
             return new Response(JSON.stringify({ error: "Invalid JSON" }), {
                 headers: CORSheaders,
