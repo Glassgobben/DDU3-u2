@@ -26,13 +26,10 @@ fetch(req1)
             div2.addEventListener("click", function () {
                 fetch(req1, { method: "DELETE" })
                     .then(response => {
-                        if (!response.ok) {
-                            throw new Error("Något gick fel vid borttagning")
-                        }
-                        return console.log(`${name} har tagits bort från databasen`);
+                        response.json();
                     })
                     .then(resource => {
-                        div1.remove();
+                        console.log(resource);
                     })
                     .catch(error => {
                         console.error("Fel:", error);
@@ -88,7 +85,6 @@ addButton.addEventListener("click", function () {
             return response.json();
         })
         .then(resource => {
-            // Skapa och lägg till divar
             let div1 = document.createElement("div");
             div1.classList.add("city");
             div1.textContent = `

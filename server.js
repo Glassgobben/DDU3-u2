@@ -20,12 +20,12 @@ const cities = [
 
 async function handler(req) {
     const url = new URL(req.url);
+    const idPattern = new URLPattern({ pathname: "/cities/:id" });
 
     const CORSheaders = new Headers({
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Headers": "Content-Type",
-        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-        "Content-Type": "application/json"
+        "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS"
     });
 
     if (req.method === "OPTIONS") {
@@ -35,32 +35,67 @@ async function handler(req) {
         });
     }
 
-    if (req.method == "GET") {
-        return new Response(JSON.stringify(cities), { headers: CORSheaders, status: 200 });
-    }
+    // GET & POST till /cities
+    if (url.pathname === "/cities") {
 
-    if (req.method == "POST") {
-        try {
-            const body = await req.json();
-            const newCity = {
-                id: cities[cities.length - 1].id + 1,
-                name: body.name,
-                country: body.country
-            };
-            cities.push(newCity);
-            return new Response(JSON.stringify(newCity), {
+        if (req.method === "GET") {
+            return new Response(JSON.stringify(cities), {
                 headers: CORSheaders,
                 status: 200
             });
-        } catch (error) {
-            return new Response(JSON.stringify({ error: "Invalid JSON" }), {
-                headers: CORSheaders,
-                status: 400
-            });
+
+            if (req.method === "DELETE") {
+                const match = idPattern.exec(req.url);
+                const id = parseInt(match.pathname.groups.id);
+                const index = cities.findIndex(city => city.id === id);
+
+                if (index !== -1) {
+                    cities.splice(index, 1);
+                    return new Response(JSON.stringify({ message: `City ${id} deleted` }), {
+                        headers: CORSheaders,
+                        status: 200
+                    });
+                } else {
+                    return new Response(JSON.stringify({ error: "City not found" }), {
+                        headers: CORSheaders,
+                        status: 404
+                    });
+                }
+            }
+        }
+
+        if (req.method === "POST") {
+            try {
+                const body = await req.json();
+                const newCity = {
+                    id: cities[cities.length - 1].id + 1,
+                    name: body.name,
+                    country: body.country
+                };
+                cities.push(newCity);
+                return new Response(JSON.stringify(newCity), {
+                    headers: CORSheaders,
+                    status: 200
+                });
+            } catch (error) {
+                return new Response(JSON.stringify({ error: "Invalid JSON" }), {
+                    headers: CORSheaders,
+                    status: 400
+                });
+            }
         }
     }
 
-    return new Response("Not Found", { status: 404 });
+    // DELETE till /cities/:id
+
+
+    return new Response("Not Found", {
+        status: 404,
+        headers: CORSheaders
+    });
 }
+
+Deno.serve(handler);
+
 
 Deno.serve(handler);
