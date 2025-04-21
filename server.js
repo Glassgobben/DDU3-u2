@@ -31,11 +31,10 @@ async function handler(req) {
     if (req.method === "OPTIONS") {
         return new Response(null, {
             status: 204,
-            headers: CORSheaders
+            headers: CORSheaders,
         });
     }
 
-    // GET & POST till /cities
     if (url.pathname === "/cities") {
 
         if (req.method === "GET") {
@@ -43,25 +42,6 @@ async function handler(req) {
                 headers: CORSheaders,
                 status: 200
             });
-
-            if (req.method === "DELETE") {
-                const match = idPattern.exec(req.url);
-                const id = parseInt(match.pathname.groups.id);
-                const index = cities.findIndex(city => city.id === id);
-
-                if (index !== -1) {
-                    cities.splice(index, 1);
-                    return new Response(JSON.stringify({ message: `City ${id} deleted` }), {
-                        headers: CORSheaders,
-                        status: 200
-                    });
-                } else {
-                    return new Response(JSON.stringify({ error: "City not found" }), {
-                        headers: CORSheaders,
-                        status: 404
-                    });
-                }
-            }
         }
 
         if (req.method === "POST") {
@@ -86,8 +66,16 @@ async function handler(req) {
         }
     }
 
-    // DELETE till /cities/:id
-
+    if (req.method === "DELETE") {
+        const body = await req.json();
+        for (let city of cities) {
+            if (city.name == body.name && city.country == body.country) {
+                cities.splice(city, 1);
+                return new Response(`Tog bort ${city} från listan`, { status: 202, headers: CORSheaders });
+            }
+        }
+        return new Response("Ingen stad i listan matchar det du vill ta bort", { status: 400, headers: CORSheaders });
+    }
 
     return new Response("Not Found", {
         status: 404,
