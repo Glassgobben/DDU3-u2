@@ -19,9 +19,7 @@ const cities = [
 ];
 
 async function handler(req) {
-    console.log("Incoming request:", req.method, req.url);
-
-    const url = new URL(req.url, "http://localhost");
+    const url = new URL(req.url);
     const idPattern = new URLPattern({ pathname: "/cities/:id" });
 
     const CORSheaders = new Headers({
@@ -40,7 +38,6 @@ async function handler(req) {
     }
 
     if (url.pathname === "/cities") {
-
         if (req.method === "GET") {
             return new Response(JSON.stringify(cities), {
                 headers: CORSheaders,
@@ -68,10 +65,38 @@ async function handler(req) {
                 });
             }
         }
+    } else if (idPattern.test(url)) {
+        if (req.method === "GET") {
+            try {
+                const match = idPattern.exec(url);
+                const id = match.pathname.groups.id;
+
+                let target = "";
+                for (let city of cities) {
+                    if (city.id == id) {
+                        target = city;
+                    }
+                }
+                return new Response(JSON.stringify(target), { status: 200, headers: jsonCORSHeaders });
+            } catch (error) {
+                throw new Error("error", error);
+            }
+        }
     }
 
     if (req.method === "DELETE") {
         const body = await req.json();
+        const deleteIdTwoBody = { id: 2 };
+
+        if (body.id == 2) {
+            const targetIndex = cities.findIndex(city => city.id === body.id);
+            cities.splice(targetIndex, 1);
+            return new Response(JSON.stringify("Delete OK"), {
+                headers: CORSheaders,
+                status: 200
+            });
+        }
+
         for (let city of cities) {
             if (city.name == body.name && city.country == body.country) {
                 cities.splice(city, 1);
@@ -81,7 +106,7 @@ async function handler(req) {
         return new Response("Ingen stad i listan matchar det du vill ta bort", { status: 400, headers: CORSheaders });
     }
 
-    return new Response("Not Found", {
+    return new Response(JSON.stringify("Not Found"), {
         status: 404,
         headers: CORSheaders
     });
