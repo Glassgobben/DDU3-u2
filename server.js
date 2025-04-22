@@ -19,7 +19,9 @@ const cities = [
 ];
 
 async function handler(req) {
-    const url = new URL(req.url);
+    console.log("Incoming request:", req.method, req.url);
+
+    const url = new URL(req.url, "http://localhost");
     const idPattern = new URLPattern({ pathname: "/cities/:id" });
 
     const CORSheaders = new Headers({
@@ -27,6 +29,8 @@ async function handler(req) {
         "Access-Control-Allow-Headers": "Content-Type",
         "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS"
     });
+
+    const jsonCORSHeaders = { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" };
 
     if (req.method === "OPTIONS") {
         return new Response(null, {
@@ -54,7 +58,7 @@ async function handler(req) {
                 };
                 cities.push(newCity);
                 return new Response(JSON.stringify(newCity), {
-                    headers: CORSheaders,
+                    headers: jsonCORSHeaders,
                     status: 200
                 });
             } catch (error) {
@@ -82,8 +86,5 @@ async function handler(req) {
         headers: CORSheaders
     });
 }
-
-Deno.serve(handler);
-
 
 Deno.serve(handler);

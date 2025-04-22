@@ -23,19 +23,23 @@ fetch(req)
             let div2 = document.createElement("div");
             div2.classList.add("delete_button");
             div2.textContent = "delete";
-            /* div2.addEventListener("click", async function () {
-                 fetch(req, { method: "DELETE" })
-                     .then(response => {
-                         response.json();
-                     })
-                     .then(resource => {
-                         const target = resource.filter(city => city.name == name && city.country == country);
-                         return target
-                     })
-                     .catch(error => {
-                         console.error("Fel:", error);
-                     });
-             }) */
+            div2.addEventListener("click", async function () {
+                fetch(req, {
+                    method: "DELETE",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(city)
+                })
+                    .then(response => {
+                        response.json();
+                        div1.remove();
+                    })
+                    .then(resource => {
+                        console.log(resource);
+                    })
+                    .catch(error => {
+                        console.error("Fel:", error);
+                    });
+            })
 
             cities.append(div1);
             div1.append(div2);
