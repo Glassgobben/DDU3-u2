@@ -70,7 +70,7 @@ async function handler(req) {
             try {
                 const match = idPattern.exec(url);
                 const id = match.pathname.groups.id;
-
+                console.log(id);
                 let target = "";
                 for (let city of cities) {
                     if (city.id == id) {
@@ -81,6 +81,12 @@ async function handler(req) {
             } catch (error) {
                 throw new Error("error", error);
             }
+        }
+    } if (url.searchParams.has("text")) {
+        if (req.method == "GET") {
+            const regex = new RegExp(url.searchParams.get("text"), "i");
+            const match = cities.filter(city => regex.test(city.name) || regex.test(city.country));
+            return new Response(JSON.stringify(match), { status: 200, headers: jsonCORSHeaders });
         }
     }
 
