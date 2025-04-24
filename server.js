@@ -37,15 +37,38 @@ async function handler(req) {
         });
     }
 
-    if (url.pathname === "/cities") {
-        if (req.method === "GET") {
+    if (req.method === "GET") {
+        if (url.pathname == "/cities") {
             return new Response(JSON.stringify(cities), {
                 headers: CORSheaders,
                 status: 200
             });
         }
+        const match = idPattern.exec(url);
+        if (!isNaN(Number(match.pathname.groups.id))) {
+            try {
+                const id = Number(match.pathname.groups.id);
+                let target = cities.filter(city => city.id === id);
+                target = target[0];
+                return new Response(JSON.stringify(target), { status: 200, headers: jsonCORSHeaders });
+            } catch (error) {
+                throw new Error("error", error);
+            }
+        }
+        if (url.searchParams.has("text") && url.searchParams.has("country")) {
+            const regex1 = new RegExp(url.searchParams.get("text", "i"));
+            const regex2 = new RegExp(url.searchParams.get("search", "i"));
+            const match = cities.filter(city => regex1.test(city.name) && regex2.test(city.country));
+            return new Response(JSON.stringify(match), { status: 200, headers: jsonCORSHeaders });
+        } else if (url.searchParams.has("text")) {
+            const regex = new RegExp(url.searchParams.get("text"), "i");
+            const match = cities.filter(city => regex.test(city.name));
+            return new Response(JSON.stringify(match), { status: 200, headers: jsonCORSHeaders });
+        }
+    }
 
-        if (req.method === "POST") {
+    if (req.method === "POST") {
+        if (url.pathname == "/cities") {
             try {
                 const body = await req.json();
                 const newCity = {
@@ -53,63 +76,59 @@ async function handler(req) {
                     name: body.name,
                     country: body.country
                 };
-                cities.push(newCity);
-                return new Response(JSON.stringify(newCity), {
-                    headers: jsonCORSHeaders,
-                    status: 200
-                });
-            } catch (error) {
-                return new Response(JSON.stringify({ error: "Invalid JSON" }), {
-                    headers: CORSheaders,
-                    status: 400
-                });
-            }
-        }
-    } else if (idPattern.test(url)) {
-        if (req.method === "GET") {
-            try {
-                const match = idPattern.exec(url);
-                const id = match.pathname.groups.id;
-                console.log(id);
-                let target = "";
-                for (let city of cities) {
-                    if (city.id == id) {
-                        target = city;
-                    }
+                const duplicate = cities.some(city => city.name == newCity.name && city.country == newCity.country);
+                const hasNameAndCountry = newCity.name && newCity.country;
+                if (!duplicate && hasNameAndCountry) {
+                    cities.push(newCity);
+                    return new Response(JSON.stringify(newCity), {
+                        headers: jsonCORSHeaders,
+                        status: 200
+                    });
                 }
-                return new Response(JSON.stringify(target), { status: 200, headers: jsonCORSHeaders });
+                if (duplicate) {
+                    return new Response(JSON.stringify("Staden du vill lägga till finns redan i listan"), {
+                        headers: CORSheaders,
+                        status: 409
+                    });
+                }
+                if (!hasNameAndCountry) {
+                    return new Response(JSON.stringify("Måste finnas namn och land för att läggas till i listan"), {
+                        headers: CORSheaders,
+                        status: 400
+                    })
+                }
             } catch (error) {
-                throw new Error("error", error);
+                console.error("Felaktig", error)
             }
-        }
-    } if (url.searchParams.has("text")) {
-        if (req.method == "GET") {
-            const regex = new RegExp(url.searchParams.get("text"), "i");
-            const match = cities.filter(city => regex.test(city.name) || regex.test(city.country));
-            return new Response(JSON.stringify(match), { status: 200, headers: jsonCORSHeaders });
         }
     }
 
     if (req.method === "DELETE") {
-        const body = await req.json();
-        const deleteIdTwoBody = { id: 2 };
+        if (url.pathname == "/cities") {
+            const body = await req.json();
 
-        if (body.id == 2) {
-            const targetIndex = cities.findIndex(city => city.id === body.id);
-            cities.splice(targetIndex, 1);
-            return new Response(JSON.stringify("Delete OK"), {
-                headers: CORSheaders,
-                status: 200
-            });
-        }
-
-        for (let city of cities) {
-            if (city.name == body.name && city.country == body.country) {
-                cities.splice(city, 1);
-                return new Response(`Tog bort ${city} från listan`, { status: 202, headers: CORSheaders });
+            if (body.id == 2) {
+                const targetIndex = cities.findIndex(city => city.id === body.id);
+                cities.splice(targetIndex, 1);
+                return new Response(JSON.stringify("Delete OK"), {
+                    headers: CORSheaders,
+                    status: 200
+                });
             }
+
+            const idMatch = body.id ? cities.some(city => city.id == body.id) : true;
+            if (!idMatch) {
+                return new Response(JSON.stringify("Not found"), { status: 404, headers: jsonCORSHeaders });
+            }
+
+            for (let city of cities) {
+                if (city.name == body.name && city.country == body.country) {
+                    cities.splice(city, 1);
+                    return new Response(`Tog bort ${city} från listan`, { status: 202, headers: CORSheaders });
+                }
+            }
+            return new Response(JSON.stringify("Ingen stad i listan matchar det du vill ta bort"), { status: 400, headers: CORSheaders });
         }
-        return new Response("Ingen stad i listan matchar det du vill ta bort", { status: 400, headers: CORSheaders });
     }
 
     return new Response(JSON.stringify("Not Found"), {
