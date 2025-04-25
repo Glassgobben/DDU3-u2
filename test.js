@@ -192,6 +192,59 @@ button[10].addEventListener("click", function () {
 })
 
 //12
-button[11].addEventListener("click", function () {
+const req5 = new Request("http://localhost:8000/messages")
 
+button[11].addEventListener("click", function () {
+    const body = {
+        from: 2,
+        to: 1,
+        password: "pass"
+    };
+
+    async function requestTwelve() {
+        try {
+            const response = await fetch(req5, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body)
+            });
+            return await response.json();
+        } catch (error) {
+            return console.error("12", error);
+        }
+    }
+
+    async function driverRequestTwelve() {
+        const resource = await requestTwelve();
+        if (resource == false) {
+            console.error("12: Fel vid hämtning av resurs", resource);
+        } else {
+            return message.textContent = JSON.stringify(resource);
+        }
+    }
+    return driverRequestTwelve();
+})
+
+const req6 = new Request("http://localhost:8000/cities/search");
+
+//13
+button[12].addEventListener("click", function () {
+    async function requestThirteen() {
+        try {
+            const response = await fetch(req6);
+            return await response.json();
+        } catch (error) {
+            return console.error("13", error);
+        }
+    }
+
+    async function driverRequestThirteen() {
+        const resource = await requestThirteen();
+        if (resource == false) {
+            console.error("13: Fel vid hämtning av resurs", resource);
+        } else {
+            return message.textContent = JSON.stringify(resource);
+        }
+    }
+    return driverRequestThirteen();
 })

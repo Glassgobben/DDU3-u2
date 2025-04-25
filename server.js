@@ -38,7 +38,7 @@ async function handler(req) {
     }
 
     if (req.method === "GET") {
-        if (url.pathname == "/cities") {
+        if (url.pathname === "/cities") {
             return new Response(JSON.stringify(cities), {
                 headers: CORSheaders,
                 status: 200
@@ -55,20 +55,26 @@ async function handler(req) {
                 throw new Error("error", error);
             }
         }
-        if (url.searchParams.has("text") && url.searchParams.has("country")) {
-            const regex1 = new RegExp(url.searchParams.get("text", "i"));
-            const regex2 = new RegExp(url.searchParams.get("search", "i"));
-            const match = cities.filter(city => regex1.test(city.name) && regex2.test(city.country));
-            return new Response(JSON.stringify(match), { status: 200, headers: jsonCORSHeaders });
-        } else if (url.searchParams.has("text")) {
-            const regex = new RegExp(url.searchParams.get("text"), "i");
-            const match = cities.filter(city => regex.test(city.name));
-            return new Response(JSON.stringify(match), { status: 200, headers: jsonCORSHeaders });
+
+        if (url.pathname == "/cities/search") {
+            if (url.searchParams.has("text") && url.searchParams.has("country")) {
+                const regex1 = new RegExp(url.searchParams.get("text"), "i");
+                const regex2 = new RegExp(url.searchParams.get("search"), "i");
+                const match = cities.filter(city => regex1.test(city.name) && regex2.test(city.country));
+                return new Response(JSON.stringify(match), { status: 200, headers: jsonCORSHeaders });
+            } else if (url.searchParams.has("text")) {
+                const regex = new RegExp(url.searchParams.get("text"), "i");
+                const match = cities.filter(city => regex.test(city.name));
+                return new Response(JSON.stringify(match), { status: 200, headers: jsonCORSHeaders });
+            }
+            if (!url.searchParams.has("text")) {
+                return new Response(JSON.stringify("Namn saknas"), { status: 400, headers: jsonCORSHeaders });
+            }
         }
     }
 
     if (req.method === "POST") {
-        if (url.pathname == "/cities") {
+        if (url.pathname === "/cities") {
             try {
                 const body = await req.json();
                 const newCity = {
@@ -101,10 +107,13 @@ async function handler(req) {
                 console.error("Felaktig", error)
             }
         }
+        if (url.pathname === "/messages") {
+            return new Response(JSON.stringify("Kunde inte posta"), { status: 400, headers: jsonCORSHeaders });
+        }
     }
 
     if (req.method === "DELETE") {
-        if (url.pathname == "/cities") {
+        if (url.pathname === "/cities") {
             const body = await req.json();
 
             if (body.id == 2) {
