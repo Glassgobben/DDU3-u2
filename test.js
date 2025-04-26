@@ -32,14 +32,15 @@ button[1].addEventListener("click", function () {
 
 //3
 button[2].addEventListener("click", function () {
+    const body = { id: 2 };
     return fetch(req1, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: 2 })
+        body: JSON.stringify(body)
     })
         .then(response => {
             if (!response.ok) {
-                throw new Error("Kunde inte deleta staden med id: 2")
+                throw new Error(`Kunde inte deleta staden med id 2`)
             }
             return response.json();
         })
@@ -247,4 +248,33 @@ button[12].addEventListener("click", function () {
         }
     }
     return driverRequestThirteen();
+})
+
+const req7 = new Request("http://localhost:8000/mordor");
+
+//14 
+button[13].addEventListener("click", function () {
+    async function requestFourteen() {
+        try {
+            const body = "Mordor";
+            const response = await fetch(req7, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body)
+            });
+            return await response.json();
+        } catch (eroor) {
+            return console.error("14: Fel vid hämtning av resurs", error);
+        }
+    }
+
+    async function driverRequestFourteen() {
+        const resource = await requestFourteen();
+        if (resource == false) {
+            console.error("14: Fel vid hämtning av resurs", resource);
+        } else {
+            return message.textContent = JSON.stringify(resource);
+        }
+    }
+    return driverRequestFourteen();
 })

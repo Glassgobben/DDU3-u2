@@ -37,112 +37,102 @@ async function handler(req) {
         });
     }
 
-    if (req.method === "GET") {
+    if (url.pathname.startsWith("/cities")) {
         if (url.pathname === "/cities") {
-            return new Response(JSON.stringify(cities), {
-                headers: CORSheaders,
-                status: 200
-            });
-        }
-        const match = idPattern.exec(url);
-        if (!isNaN(Number(match.pathname.groups.id))) {
-            try {
-                const id = Number(match.pathname.groups.id);
-                let target = cities.filter(city => city.id === id);
-                target = target[0];
-                return new Response(JSON.stringify(target), { status: 200, headers: jsonCORSHeaders });
-            } catch (error) {
-                throw new Error("error", error);
+            if (req.method == "GET") {
+                return new Response(JSON.stringify(cities), { status: 200, headers: jsonCORSHeaders });
             }
-        }
-
-        if (url.pathname == "/cities/search") {
-            if (url.searchParams.has("text") && url.searchParams.has("country")) {
-                const regex1 = new RegExp(url.searchParams.get("text"), "i");
-                const regex2 = new RegExp(url.searchParams.get("search"), "i");
-                const match = cities.filter(city => regex1.test(city.name) && regex2.test(city.country));
-                return new Response(JSON.stringify(match), { status: 200, headers: jsonCORSHeaders });
-            } else if (url.searchParams.has("text")) {
-                const regex = new RegExp(url.searchParams.get("text"), "i");
-                const match = cities.filter(city => regex.test(city.name));
-                return new Response(JSON.stringify(match), { status: 200, headers: jsonCORSHeaders });
+            if (req.method == "POST") {
+                try {
+                    const body = await req.json();
+                    const duplicate = cities.some(city => city.name == body.name && city.country == body.country);
+                    if (duplicate) {
+                        return new Response(JSON.stringify("Staden du vill lägga till finns redan i listan"), {
+                            headers: jsonCORSHeaders,
+                            status: 409
+                        });
+                    }
+                    const newCity = {
+                        id: cities[cities.length - 1].id + 1,
+                        name: body.name,
+                        country: body.country
+                    };
+                    const hasNameAndCountry = newCity.name && newCity.country;
+                    if (hasNameAndCountry) {
+                        cities.push(newCity);
+                        return new Response(JSON.stringify(newCity), {
+                            headers: jsonCORSHeaders,
+                            status: 200
+                        });
+                    }
+                    if (!hasNameAndCountry) {
+                        return new Response(JSON.stringify("Namn eller land saknas"), {
+                            headers: jsonCORSHeaders,
+                            status: 400
+                        })
+                    }
+                } catch (error) {
+                    console.error("Felaktig", error)
+                }
             }
-            if (!url.searchParams.has("text")) {
-                return new Response(JSON.stringify("Namn saknas"), { status: 400, headers: jsonCORSHeaders });
-            }
-        }
-    }
-
-    if (req.method === "POST") {
-        if (url.pathname === "/cities") {
-            try {
+            if (req.method == "DELETE") {
                 const body = await req.json();
-                const newCity = {
-                    id: cities[cities.length - 1].id + 1,
-                    name: body.name,
-                    country: body.country
-                };
-                const duplicate = cities.some(city => city.name == newCity.name && city.country == newCity.country);
-                const hasNameAndCountry = newCity.name && newCity.country;
-                if (!duplicate && hasNameAndCountry) {
-                    cities.push(newCity);
-                    return new Response(JSON.stringify(newCity), {
+                const idOk = body.id ? cities.some(city => city.id == body.id) : true
+
+                if (!isNaN(Number(body.id)) && idOk) {
+                    const bodyIndex = cities.findIndex(city => city.id === body.id);
+                    cities.splice(bodyIndex, 1);
+                    return new Response(JSON.stringify("Delete OK"), {
                         headers: jsonCORSHeaders,
                         status: 200
                     });
                 }
-                if (duplicate) {
-                    return new Response(JSON.stringify("Staden du vill lägga till finns redan i listan"), {
-                        headers: CORSheaders,
-                        status: 409
-                    });
+
+                if (!idOk) {
+                    return new Response(JSON.stringify("Not found"), { status: 404, headers: jsonCORSHeaders });
                 }
-                if (!hasNameAndCountry) {
-                    return new Response(JSON.stringify("Måste finnas namn och land för att läggas till i listan"), {
-                        headers: CORSheaders,
-                        status: 400
-                    })
-                }
-            } catch (error) {
-                console.error("Felaktig", error)
+
+                return new Response(JSON.stringify("Hittar inte staden du vill ta bort"), { status: 400, headers: CORSheaders });
             }
         }
-        if (url.pathname === "/messages") {
-            return new Response(JSON.stringify("Kunde inte posta"), { status: 400, headers: jsonCORSHeaders });
-        }
-    }
 
-    if (req.method === "DELETE") {
-        if (url.pathname === "/cities") {
-            const body = await req.json();
+        const match = idPattern.exec(url);
+        const id = match.pathname.groups.id;
 
-            if (body.id == 2) {
-                const targetIndex = cities.findIndex(city => city.id === body.id);
-                cities.splice(targetIndex, 1);
-                return new Response(JSON.stringify("Delete OK"), {
-                    headers: CORSheaders,
-                    status: 200
-                });
-            }
-
-            const idMatch = body.id ? cities.some(city => city.id == body.id) : true;
-            if (!idMatch) {
+        if (!isNaN(Number(id))) {
+            let target = cities.find(city => city.id == id);
+            if (target) {
+                return new Response(JSON.stringify(target), { status: 200, headers: jsonCORSHeaders });
+            } else {
                 return new Response(JSON.stringify("Not found"), { status: 404, headers: jsonCORSHeaders });
             }
+        }
 
-            for (let city of cities) {
-                if (city.name == body.name && city.country == body.country) {
-                    cities.splice(city, 1);
-                    return new Response(`Tog bort ${city} från listan`, { status: 202, headers: CORSheaders });
+        if (url.pathname == "/cities/search") {
+            if (req.method == "GET") {
+                if (url.searchParams.has("text")) {
+                    if (url.searchParams.has("country")) {
+                        const regex1 = new RegExp(url.searchParams.get("text"), "i");
+                        const regex2 = new RegExp(url.searchParams.get("search"), "i");
+                        const match = cities.filter(city => regex1.test(city.name) && regex2.test(city.country));
+                        return new Response(JSON.stringify(match), { status: 200, headers: jsonCORSHeaders });
+                    }
+
+                    const regex = new RegExp(url.searchParams.get("text"), "i");
+                    const match = cities.filter(city => regex.test(city.name));
+                    return new Response(JSON.stringify(match), { status: 200, headers: jsonCORSHeaders });
+                } else {
+                    return new Response(JSON.stringify("Text saknas"), { status: 400, headers: jsonCORSHeaders });
                 }
             }
-            return new Response(JSON.stringify("Ingen stad i listan matchar det du vill ta bort"), { status: 400, headers: CORSheaders });
         }
+    } else {
+        return new Response(JSON.stringify("Ogiltig sökväg"), { status: 400, headers: jsonCORSHeaders });
     }
 
     return new Response(JSON.stringify("Not Found"), {
         status: 404,
-        headers: CORSheaders
+        headers: jsonCORSHeaders
     });
 }
 
