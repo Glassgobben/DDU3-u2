@@ -113,14 +113,14 @@ async function handler(req) {
                 if (url.searchParams.has("text")) {
                     if (url.searchParams.has("country")) {
                         const regex1 = new RegExp(url.searchParams.get("text"), "i");
-                        const regex2 = new RegExp(url.searchParams.get("search"), "i");
+                        const regex2 = new RegExp(url.searchParams.get("country"), "i");
                         const match = cities.filter(city => regex1.test(city.name) && regex2.test(city.country));
                         return new Response(JSON.stringify(match), { status: 200, headers: jsonCORSHeaders });
+                    } else {
+                        const regex = new RegExp(url.searchParams.get("text"), "i");
+                        const match = cities.filter(city => regex.test(city.name));
+                        return new Response(JSON.stringify(match), { status: 200, headers: jsonCORSHeaders });
                     }
-
-                    const regex = new RegExp(url.searchParams.get("text"), "i");
-                    const match = cities.filter(city => regex.test(city.name));
-                    return new Response(JSON.stringify(match), { status: 200, headers: jsonCORSHeaders });
                 } else {
                     return new Response(JSON.stringify("Text saknas"), { status: 400, headers: jsonCORSHeaders });
                 }

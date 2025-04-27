@@ -1,3 +1,4 @@
+const header = document.querySelector("header");
 const rightContainer = document.getElementById("right");
 const cities = document.getElementById("cities");
 const addName = document.getElementById("add_name");
@@ -16,29 +17,23 @@ fetch(req)
         resource.forEach(city => {
             let div1 = document.createElement("div");
             div1.classList.add("city");
-            const name = city.name;
-            const country = city.country;
-            div1.textContent = `${name}, ${country}`;
+            div1.textContent = `${city.name}, ${city.country}`;
 
             let div2 = document.createElement("div");
             div2.classList.add("delete_button");
             div2.textContent = "delete";
-            div2.addEventListener("click", async function () {
+            div2.addEventListener("click", function () {
                 fetch(req, {
                     method: "DELETE",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(city)
                 })
                     .then(response => {
-                        response.json();
                         div1.remove();
                     })
                     .then(resource => {
-                        console.log(resource);
+                        console.log(city);
                     })
-                    .catch(error => {
-                        console.error("Fel:", error);
-                    });
             })
 
             cities.append(div1);
@@ -51,90 +46,89 @@ addButton.addEventListener("click", function () {
         name: addName.value,
         country: addCountry.value
     };
-    let lock = false;
 
-    fetch(req)
-        .then(response => response.json())
-        .then(resource => {
-            resource.forEach(city => {
-                if (
-                    city.name.toLowerCase() === newCity.name.toLowerCase() &&
-                    city.country.toLowerCase() === newCity.country.toLowerCase()
-                ) {
-                    lock = true;
-                }
-            });
-            if (lock) {
-                throw new Error("Staden finns redan i listan!");
-            }
-            if (addName.value.trim() === "" || addCountry.value.trim() === "") {
-                throw new Error("Skriv både namn och land för att lägga till en stad!");
-            }
-            return fetch(req, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(newCity)
-            });
-        })
+    return fetch(req, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newCity)
+    })
         .then(response => {
-            if (!response.ok) {
-                throw new Error("Något gick fel vid POST");
-            }
             return response.json();
         })
         .then(resource => {
-            let div1 = document.createElement("div");
-            div1.classList.add("city");
-            div1.textContent = `
-            ${resource.name.charAt(0).toUpperCase() + resource.name.slice(1).toLowerCase()},
-            ${resource.country.charAt(0).toUpperCase() + resource.country.slice(1).toLowerCase()}
-            `;
+            if (resource.id && resource.name && resource.country) {
+                header.style.position = "absolute";
+                header.textContent = "";
 
-            let div2 = document.createElement("div");
-            div2.classList.add("delete_button");
-            div2.textContent = "delete";
+                let div1 = document.createElement("div");
+                div1.classList.add("city");
+                div1.textContent = `
+                ${resource.name.charAt(0).toUpperCase() + resource.name.slice(1).toLowerCase()},
+                ${resource.country.charAt(0).toUpperCase() + resource.country.slice(1).toLowerCase()}
+                `;
 
-            cities.append(div1);
-            div1.append(div2);
+                let div2 = document.createElement("div");
+                div2.classList.add("delete_button");
+                div2.textContent = "delete";
+
+                cities.append(div1);
+                div1.append(div2);
+            } else {
+                header.style.position = "relative";
+                header.textContent = resource;
+            }
         })
-        .catch(error => {
-            console.error("Fel:", error.message);
-        });
-})
+});
+
 
 
 searchButton.addEventListener("click", function () {
-    if (searchName.value.trim() != "" || searchCountry.value.trim() != "") {
-        const allMatches = [];
-        fetch(req)
-            .then(response => response.json())
-            .then(resource => {
-                if (searchName.value.trim()) {
-                    const nameMatches = resource.filter(city => city.name.toLowerCase().includes(searchName.value));
-                    nameMatches.forEach(match => allMatches.push(match));
-                }
-                if (searchCountry.value.trim()) {
-                    const countryMatches = resource.filter(city => city.country.toLowerCase().includes(searchCountry.value));
-                    countryMatches.forEach(match => !allMatches.includes(match) ? allMatches.push(match) : null);
-                }
-                citySuggestions.innerHTML = "";
-                if (allMatches.length) {
-                    allMatches.forEach(match => {
-                        let div = document.createElement("div");
-                        div.classList.add("city");
-                        div.textContent = `${match.name}, ${match.country}`;
-                        citySuggestions.append(div);
-                        citySuggestions.classList.add("city_suggestions");
-                        citySuggestions.removeAttribute("id");
-                    });
-                } else {
+    if (searchName.value || searchCountry.value) {
+        let searchReq = "";
+        if (searchName.value && searchCountry.value) {
+            searchReq = new Request(`http://localhost:8000/cities/search?text=${searchName.value}&country=${searchCountry.value}`);
+        } else if (searchName.value) {
+            searchReq = new Request(`http://localhost:8000/cities/search?text=${searchName.value}`);
+        }
+        if (!searchReq) {
+            citySuggestions.textContent = "";
+            let div = document.createElement("div");
+            div.setAttribute("id", "no_city");
+            div.textContent = "No cities found";
+            citySuggestions.append(div);
+            citySuggestions.classList.add("city_suggestions");
+            citySuggestions.removeAttribute("id");
+            return;
+        }
+
+        async function searchResult() {
+            const response = await fetch(searchReq);
+            return await response.json();
+        }
+
+        async function driverSearchResult() {
+            const resource = await searchResult();
+            citySuggestions.textContent = "";
+            if (resource.length) {
+                resource.forEach(match => {
                     let div = document.createElement("div");
-                    div.setAttribute("id", "no_city");
-                    div.textContent = "No cities found...";
+                    div.classList.add("city");
+                    div.textContent = `${match.name}, ${match.country}`;
                     citySuggestions.append(div);
                     citySuggestions.classList.add("city_suggestions");
                     citySuggestions.removeAttribute("id");
-                }
-            });
+                });
+            } else {
+                citySuggestions.textContent = "";
+                let div = document.createElement("div");
+                div.setAttribute("id", "no_city");
+                div.textContent = "No cities found";
+                citySuggestions.append(div);
+                citySuggestions.classList.add("city_suggestions");
+                citySuggestions.removeAttribute("id");
+                return;
+            }
+        }
+        return driverSearchResult();
     }
-})
+});
